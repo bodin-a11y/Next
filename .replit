@@ -22,10 +22,6 @@ externalPort = 80
 localPort = 5000
 externalPort = 80
 
-[[ports]]
-localPort = 35895
-externalPort = 3000
-
 [agent]
 expertMode = true
 
@@ -47,7 +43,7 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npm run dev -- --port 5000 --hostname 0.0.0.0"
+args = "npm run dev"
 waitForPort = 5000
 
 [workflows.workflow.metadata]
