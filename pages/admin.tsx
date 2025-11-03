@@ -3,6 +3,38 @@ import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 
+type CardProps = {
+  title: string;
+  text: string;
+  href: string;
+  gradient: string;
+};
+
+function Card({ title, text, href, gradient }: CardProps) {
+  return (
+    <Link
+      href={href}
+      className="group relative block bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden transform hover:-translate-y-2 focus:outline-none focus:ring-4 focus:ring-blue-300"
+      aria-label={title}
+    >
+      <div
+        className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}
+        aria-hidden="true"
+      />
+      <div className="p-7">
+        <h3 className="text-xl font-bold text-gray-900 mb-2">{title}</h3>
+        <p className="text-gray-600 mb-5">{text}</p>
+        <span className="inline-flex items-center text-blue-600 font-semibold group-hover:translate-x-2 transition-transform">
+          Перейти
+          <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </span>
+      </div>
+    </Link>
+  );
+}
+
 export default function AdminPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
@@ -19,21 +51,19 @@ export default function AdminPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link href="/" legacyBehavior>
-                <a className="inline-flex items-center gap-3 group">
-                  <Image
-                    src="/sonmar-logo.webp"
-                    alt="SONMAR"
-                    width={120}
-                    height={32}
-                    className="h-8 w-auto"
-                    priority
-                    sizes="120px"
-                  />
-                  <span className="text-sm text-gray-500 group-hover:text-gray-700 transition">
-                    На главную
-                  </span>
-                </a>
+              <Link href="/" className="inline-flex items-center gap-3 group">
+                <Image
+                  src="/sonmar-logo.webp"
+                  alt="SONMAR"
+                  width={120}
+                  height={32}
+                  className="h-8 w-auto"
+                  priority
+                  sizes="120px"
+                />
+                <span className="text-sm text-gray-500 group-hover:text-gray-700 transition">
+                  На главную
+                </span>
               </Link>
             </div>
 
@@ -41,12 +71,12 @@ export default function AdminPage() {
               <Link href="/" className="text-gray-600 hover:text-blue-600 transition">
                 Главная
               </Link>
-              <a href="#actions" className="text-gray-600 hover:text-blue-600 transition">
+              <Link href="#actions" className="text-gray-600 hover:text-blue-600 transition">
                 Действия
-              </a>
-              <a href="#steps" className="text-gray-600 hover:text-blue-600 transition">
+              </Link>
+              <Link href="#steps" className="text-gray-600 hover:text-blue-600 transition">
                 Как это работает
-              </a>
+              </Link>
             </nav>
           </div>
         </div>
@@ -68,18 +98,20 @@ export default function AdminPage() {
                 </p>
 
                 <div className="flex flex-wrap gap-3">
-                  <Link href="#actions" legacyBehavior>
-                    <a className="inline-flex items-center justify-center px-5 py-3 rounded-xl bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition focus:outline-none focus:ring-4 focus:ring-blue-300">
-                      Перейти к действиям
-                      <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </a>
+                  <Link
+                    href="#actions"
+                    className="inline-flex items-center justify-center px-5 py-3 rounded-xl bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition focus:outline-none focus:ring-4 focus:ring-blue-300"
+                  >
+                    Перейти к действиям
+                    <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
                   </Link>
-                  <Link href="#steps" legacyBehavior>
-                    <a className="inline-flex items-center justify-center px-5 py-3 rounded-xl bg-white text-slate-700 font-semibold border border-slate-200 shadow-sm hover:bg-slate-50 transition focus:outline-none focus:ring-4 focus:ring-slate-200">
-                      Как это работает
-                    </a>
+                  <Link
+                    href="#steps"
+                    className="inline-flex items-center justify-center px-5 py-3 rounded-xl bg-white text-slate-700 font-semibold border border-slate-200 shadow-sm hover:bg-slate-50 transition focus:outline-none focus:ring-4 focus:ring-slate-200"
+                  >
+                    Как это работает
                   </Link>
                 </div>
 
@@ -107,14 +139,14 @@ export default function AdminPage() {
                 href="/admin/users"
                 gradient="from-blue-500 to-blue-600"
               />
-              
+
               <Card
                 title="Возвраты и статусы"
                 text="Мониторинг возвратов. Контроль корректного отката статуса талона в Черновик."
                 href="/admin/returns"
                 gradient="from-indigo-500 to-indigo-600"
               />
-              
+
               <Card
                 title="Аудит событий"
                 text="Журнал действий: кто и когда создал, изменил или инициировал возврат."
@@ -151,15 +183,17 @@ export default function AdminPage() {
                 </ul>
 
                 <div className="mt-5 flex flex-wrap gap-3">
-                  <Link href="/admin/integrations" legacyBehavior>
-                    <a className="inline-flex items-center px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition focus:outline-none focus:ring-4 focus:ring-blue-300">
-                      Открыть интеграции
-                    </a>
+                  <Link
+                    href="/admin/integrations"
+                    className="inline-flex items-center px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition focus:outline-none focus:ring-4 focus:ring-blue-300"
+                  >
+                    Открыть интеграции
                   </Link>
-                  <Link href="/admin/settings" legacyBehavior>
-                    <a className="inline-flex items-center px-4 py-2 rounded-lg bg-white text-slate-700 font-semibold border border-slate-200 shadow-sm hover:bg-slate-50 transition focus:outline-none focus:ring-4 focus:ring-slate-200">
-                      Правила и таймеры
-                    </a>
+                  <Link
+                    href="/admin/settings"
+                    className="inline-flex items-center px-4 py-2 rounded-lg bg-white text-slate-700 font-semibold border border-slate-200 shadow-sm hover:bg-slate-50 transition focus:outline-none focus:ring-4 focus:ring-slate-200"
+                  >
+                    Правила и таймеры
                   </Link>
                 </div>
               </div>
@@ -191,9 +225,15 @@ export default function AdminPage() {
             <div>
               <h4 className="font-semibold mb-4">Навигация</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><Link href="/" legacyBehavior><a className="hover:text-white transition">Главная</a></Link></li>
-                <li><Link href="/buyer" legacyBehavior><a className="hover:text-white transition">Покупатель</a></Link></li>
-                <li><Link href="/seller" legacyBehavior><a className="hover:text-white transition">Продавец</a></Link></li>
+                <li>
+                  <Link href="/" className="hover:text-white transition">Главная</Link>
+                </li>
+                <li>
+                  <Link href="/buyer" className="hover:text-white transition">Покупатель</Link>
+                </li>
+                <li>
+                  <Link href="/seller" className="hover:text-white transition">Продавец</Link>
+                </li>
               </ul>
             </div>
           </div>
@@ -203,38 +243,5 @@ export default function AdminPage() {
         </div>
       </footer>
     </div>
-  );
-}
-
-type CardProps = {
-  title: string;
-  text: string;
-  href: string;
-  gradient: string;
-};
-
-function Card({ title, text, href, gradient }: CardProps) {
-  return (
-    <Link href={href} legacyBehavior>
-      <a
-        className="group relative block bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden transform hover:-translate-y-2 focus:outline-none focus:ring-4 focus:ring-blue-300"
-        aria-label={title}
-      >
-        <div
-          className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}
-          aria-hidden="true"
-        />
-        <div className="p-7">
-          <h3 className="text-xl font-bold text-gray-900 mb-2">{title}</h3>
-          <p className="text-gray-600 mb-5">{text}</p>
-          <span className="inline-flex items-center text-blue-600 font-semibold group-hover:translate-x-2 transition-transform">
-            Перейти
-            <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </span>
-        </div>
-      </a>
-    </Link>
   );
 }

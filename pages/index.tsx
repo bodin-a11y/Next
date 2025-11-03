@@ -1,7 +1,7 @@
 import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
-import PWAInstallButton from '../components/PWAInstall'
+import PWAInstallButton from "../components/PWAInstall";
 
 type Role = {
   title: string;
@@ -11,7 +11,7 @@ type Role = {
   color: string;
 };
 
-// вынесли за компонент
+// Вынесено за компонент, чтобы не пересоздавалось на каждом рендере
 const roles: Role[] = [
   {
     title: "Покупатель",
@@ -24,24 +24,25 @@ const roles: Role[] = [
     title: "Продавец",
     description: "Подтверждение продажи и активация гарантийных талонов",
     icon: "🏪",
-    href: "/seller",
+    href: "/login?role=seller", // ✅ вход как продавец
     color: "from-cyan-500 to-cyan-600",
   },
   {
     title: "Монтажник",
     description: "Подтверждение монтажа и активация расширенной гарантии",
     icon: "🔧",
-    href: "/installer",
+    href: "/login?role=installer", // ✅ вход как монтажник
     color: "from-teal-500 to-teal-600",
   },
   {
     title: "Администратор",
     description: "Управление системой и мониторинг гарантийных талонов",
     icon: "⚙️",
-    href: "/admin",
+    href: "/login?role=admin", // ✅ вход как админ
     color: "from-slate-600 to-slate-700",
   },
 ];
+
 
 export default function Home() {
   return (
@@ -54,34 +55,38 @@ export default function Home() {
         />
       </Head>
 
+      {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Image
-                src="/sonmar-logo.webp"
-                alt="SONMAR"
-                width={150}
-                height={40}
-                className="h-10 w-auto"
-                priority
-                sizes="(max-width: 768px) 120px, 150px"
-              />
-        
+              <Link href="/" aria-label="На главную">
+                <Image
+                  src="/sonmar-logo.webp"
+                  alt="SONMAR"
+                  width={150}
+                  height={40}
+                  className="h-10 w-auto"
+                  priority
+                  sizes="(max-width: 768px) 120px, 150px"
+                />
+              </Link>
             </div>
-            <nav className="hidden md:flex space-x-6">
-              <a
-                href="#about"
-                className="text-gray-600 hover:text-blue-600 transition"
+
+            <nav className="hidden md:flex items-center space-x-6">
+              {/* для единообразия используем Link даже для якорей */}
+              <Link
+                href="/#about"
+                className="text-gray-600 hover:text-blue-600 transition focus:outline-none focus:ring-4 focus:ring-blue-300 rounded-md"
               >
                 О системе
-              </a>
-              <a
-                href="#contact"
-                className="text-gray-600 hover:text-blue-600 transition"
+              </Link>
+              <Link
+                href="/#contact"
+                className="text-gray-600 hover:text-blue-600 transition focus:outline-none focus:ring-4 focus:ring-blue-300 rounded-md"
               >
                 Контакты
-              </a>
+              </Link>
               <PWAInstallButton />
             </nav>
           </div>
@@ -89,8 +94,12 @@ export default function Home() {
       </header>
 
       <main>
+        {/* Hero */}
         <section className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-cyan-600/10" aria-hidden="true"></div>
+          <div
+            className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-cyan-600/10"
+            aria-hidden="true"
+          />
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 relative">
             <div className="text-center">
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
@@ -98,19 +107,26 @@ export default function Home() {
                 <span className="block text-blue-600 mt-2"> SONMAR</span>
               </h1>
               <p className="text-xl sm:text-2xl text-gray-600 max-w-3xl mx-auto mb-8">
-                Современная платформа для регистрации, подтверждения и
-                управления гарантийными талонами и инструкциями по эксплуатации
+                Современная платформа для регистрации, подтверждения и управления
+                гарантийными талонами и инструкциями по эксплуатации
               </p>
-              <div className="flex flex-wrap justify-center gap-4">
+
+              <div className="flex flex-wrap justify-center gap-4" aria-label="Ключевые свойства платформы">
                 {[
                   { label: "Быстро", icon: "⚡" },
                   { label: "Надежно", icon: "🔒" },
                   { label: "Удобно", icon: "✨" },
-                ].map((b) => (
-                  <div key={b.label} className="bg-white px-6 py-3 rounded-lg shadow-md">
-                    <span className="text-sm text-gray-500">{b.label}</span>
-                    <p className="text-2xl font-bold text-blue-600" aria-hidden="true">
-                      {b.icon}
+                ].map(({ label, icon }) => (
+                  <div
+                    key={label}
+                    className="bg-white px-6 py-3 rounded-lg shadow-md"
+                  >
+                    <span className="text-sm text-gray-500">{label}</span>
+                    <p
+                      className="text-2xl font-bold text-blue-600"
+                      aria-hidden="true"
+                    >
+                      {icon}
                     </p>
                   </div>
                 ))}
@@ -119,51 +135,62 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Roles */}
         <section className="py-16 sm:py-24">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-3xl sm:text-4xl font-bold text-center text-gray-900 mb-4">
               Выберите свою роль
             </h2>
             <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
-              Войдите в систему, выбрав соответствующую роль для доступа к функционалу
+              Войдите в систему, выбрав соответствующую роль для доступа к
+              функционалу
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {roles.map((role) => (
-                <Link key={role.title} href={role.href} legacyBehavior>
-                  <a
-                    className="group relative block bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden transform hover:-translate-y-2
-                               focus:outline-none focus:ring-4 focus:ring-blue-300"
-                    aria-label={`Войти как ${role.title}`}
-                  >
-                    <div
-                      className={`absolute inset-0 bg-gradient-to-br ${role.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}
-                      aria-hidden="true"
-                    />
-                    <div className="p-8">
-                      <div className="text-5xl mb-4" aria-hidden="true">{role.icon}</div>
-                      <h3 className="text-2xl font-bold text-gray-900 mb-3">{role.title}</h3>
-                      <p className="text-gray-600 mb-6">{role.description}</p>
-                      <span className="inline-flex items-center text-blue-600 font-semibold group-hover:translate-x-2 transition-transform">
-                        Войти
-                        <svg
-                          className="w-5 h-5 ml-2"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                          aria-hidden="true"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </span>
+                <Link
+                  key={role.title}
+                  href={role.href}
+                  className="group relative block bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden transform hover:-translate-y-2 focus:outline-none focus:ring-4 focus:ring-blue-300"
+                  aria-label={`Войти как ${role.title}`}
+                >
+                  <div
+                    className={`absolute inset-0 bg-gradient-to-br ${role.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}
+                    aria-hidden="true"
+                  />
+                  <div className="p-8">
+                    <div className="text-5xl mb-4" aria-hidden="true">
+                      {role.icon}
                     </div>
-                  </a>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                      {role.title}
+                    </h3>
+                    <p className="text-gray-600 mb-6">{role.description}</p>
+                    <span className="inline-flex items-center text-blue-600 font-semibold group-hover:translate-x-2 transition-transform">
+                      Войти
+                      <svg
+                        className="w-5 h-5 ml-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </span>
+                  </div>
                 </Link>
               ))}
             </div>
           </div>
         </section>
 
+        {/* About */}
         <section id="about" className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid md:grid-cols-2 gap-12 items-center">
@@ -171,7 +198,6 @@ export default function Home() {
                 <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
                   Преимущества системы
                 </h2>
-
                 <div className="space-y-4">
                   {[
                     { h: "Простая регистрация", p: "Быстрое оформление гарантийных талонов онлайн" },
@@ -179,8 +205,15 @@ export default function Home() {
                     { h: "Безопасность данных", p: "Надежное хранение информации о гарантии" },
                   ].map((i) => (
                     <div key={i.h} className="flex items-start space-x-3">
-                      <div className="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mt-1" aria-hidden="true">
-                        <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                      <div
+                        className="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mt-1"
+                        aria-hidden="true"
+                      >
+                        <svg
+                          className="w-4 h-4 text-blue-600"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
                           <path
                             fillRule="evenodd"
                             d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -199,14 +232,30 @@ export default function Home() {
 
               <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-8">
                 <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-600 rounded-full mb-4" aria-hidden="true">
-                    <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <div
+                    className="inline-flex items-center justify-center w-20 h-20 bg-blue-600 rounded-full mb-4"
+                    aria-hidden="true"
+                  >
+                    <svg
+                      className="w-10 h-10 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Качество SONMAR</h3>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                    Качество SONMAR
+                  </h3>
                   <p className="text-gray-600">
-                    Мы обеспечиваем высокий уровень сервиса и поддержки наших клиентов на всех этапах
+                    Мы обеспечиваем высокий уровень сервиса и поддержки наших
+                    клиентов на всех этапах
                   </p>
                 </div>
               </div>
@@ -215,6 +264,7 @@ export default function Home() {
         </section>
       </main>
 
+      {/* Footer */}
       <footer id="contact" className="bg-slate-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-3 gap-8">
@@ -227,7 +277,9 @@ export default function Home() {
                 className="h-8 w-auto mb-4 brightness-0 invert"
                 sizes="150px"
               />
-              <p className="text-gray-400">Надежные насосы для вашего дома и бизнеса</p>
+              <p className="text-gray-400">
+                Надежные насосы для вашего дома и бизнеса
+              </p>
             </div>
             <div>
               <h4 className="font-semibold mb-4">Контакты</h4>
@@ -237,9 +289,21 @@ export default function Home() {
             <div>
               <h4 className="font-semibold mb-4">Ссылки</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white transition">О компании</a></li>
-                <li><a href="#" className="hover:text-white transition">Продукция</a></li>
-                <li><a href="#" className="hover:text-white transition">Поддержка</a></li>
+                <li>
+                  <a href="#" className="hover:text-white transition">
+                    О компании
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white transition">
+                    Продукция
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-white transition">
+                    Поддержка
+                  </a>
+                </li>
               </ul>
             </div>
           </div>
