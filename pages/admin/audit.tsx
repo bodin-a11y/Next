@@ -1,6 +1,5 @@
-// pages/admin/audit.tsx
 import { useEffect, useMemo, useState } from "react";
-import AdminLayout from "../../components/AdminLayout";
+import AdminLayout from "../../features/admin/AdminLayout";
 import { AuditEvent, getAudit } from "../../data/admin";
 
 const TYPES: AuditEvent["type"][] = ["login", "registration", "warranty_update", "return", "permission_change"];

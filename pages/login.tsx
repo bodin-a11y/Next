@@ -3,22 +3,15 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 import Image from "next/image";
 import Link from "next/link";
+import { api } from "../lib/api";
+import { useAuth } from "../lib/auth-context";
 
-// Утилиты и типы для временных пользователей
-import {
-  Role,
-  seedUsersOnce,
-  upsertUser,
-  findUserByRoleAndKey,
-  setCurrentUser,
-} from "../data/users";
-
+type Role = "seller" | "installer" | "admin";
 type Mode = "login" | "register";
-
-const INVITE_CODE_DEMO = "0000"; // демо-код подтверждения
 
 export default function LoginPage() {
   const router = useRouter();
+  const { profile } = useAuth(); // если нужен автологин/переход при уже активной сессии
 
   // Если роль передана в query (?role=seller|installer|admin) — интерфейс "залочен" на неё
   const queryRole = useMemo<Role | undefined>(() => {
@@ -48,17 +41,21 @@ export default function LoginPage() {
   const [adminLogin, setAdminLogin] = useState("");
   const [adminPassword, setAdminPassword] = useState("");
 
-  // Один раз "засеять" тестовые аккаунты в localStorage
-  useEffect(() => {
-    seedUsersOnce();
-  }, []);
-
   // Держим URL в актуальном виде (удобно делиться ссылкой и возвращаться назад)
   useEffect(() => {
     const url = `/login${isLockedRole ? `?role=${role}` : `?role=${role}&mode=${mode}`}`;
     router.replace(url, undefined, { shallow: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [role, mode]);
+
+  // Если уже залогинен — перебросить на соответствующую роль
+  useEffect(() => {
+    if (!profile) return;
+    if (profile.role === "seller") router.replace("/seller");
+    else if (profile.role === "installer") router.replace("/installer");
+    else router.replace("/admin");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile]);
 
   // Редирект после успешной аутентификации
   function goAfterAuth(r: Role) {
@@ -78,24 +75,17 @@ export default function LoginPage() {
           alert("Введите логин и пароль администратора");
           return;
         }
-        const exists = findUserByRoleAndKey("admin", adminLogin.trim());
-        if (!exists) {
-          // Разрешим создать демо-аккаунт админа при первом входе
-          upsertUser({ role: "admin", login: adminLogin.trim(), password: adminPassword.trim() });
-          setCurrentUser({ role: "admin", login: adminLogin.trim() });
-          return goAfterAuth("admin");
-        }
-        if (exists.password !== adminPassword.trim()) {
-          alert("Неверный пароль администратора");
-          return;
-        }
-        setCurrentUser({ role: "admin", login: adminLogin.trim() });
+        await api.post("/auth/login", {
+          role: "admin",
+          login: adminLogin.trim(),
+          password: adminPassword.trim(),
+        });
         return goAfterAuth("admin");
       }
 
       // Продавец / Монтажник
       if (mode === "register") {
-        // Регистрация: имя + фамилия + телефон + код (в зависимости от роли)
+        // Регистрация: имя + фамилия + телефон + код
         if (!firstName.trim() || !lastName.trim() || !phone.trim()) {
           alert("Введите имя, фамилию и телефон");
           return;
@@ -104,23 +94,27 @@ export default function LoginPage() {
           alert("Введите код подтверждения");
           return;
         }
-        if (inviteCode.trim() !== INVITE_CODE_DEMO) {
-          alert("Неверный код. Для демо используйте: " + INVITE_CODE_DEMO);
-          return;
+
+        const payload = {
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          phone: phone.trim(),
+          code: inviteCode.trim(),
+        };
+
+        if (role === "seller") {
+          await api.post("/auth/planfix/register-seller", payload);
+        } else {
+          await api.post("/auth/planfix/register-installer", payload);
         }
 
-        upsertUser({
+        // После регистрации можно сразу авторизовать или отправить на вход.
+        // Здесь сразу логинимся:
+        await api.post("/auth/login", {
           role,
+          phone: phone.trim(),
           firstName: firstName.trim(),
           lastName: lastName.trim(),
-          phone: phone.trim(),
-        });
-
-        setCurrentUser({
-          role,
-          firstName: firstName.trim(),
-          lastName: lastName.trim(),
-          phone: phone.trim(),
         });
 
         return goAfterAuth(role);
@@ -131,30 +125,22 @@ export default function LoginPage() {
           return;
         }
 
-        const found = findUserByRoleAndKey(role, phone.trim());
-        if (!found) {
-          alert("Пользователь не найден. Пожалуйста, зарегистрируйтесь.");
-          return;
-        }
-
-        const okName =
-          (found.firstName || "").toLowerCase() === firstName.trim().toLowerCase() &&
-          (found.lastName || "").toLowerCase() === lastName.trim().toLowerCase();
-
-        if (!okName) {
-          alert("Имя/фамилия не совпадают с зарегистрированными");
-          return;
-        }
-
-        setCurrentUser({
+        await api.post("/auth/login", {
           role,
+          phone: phone.trim(),
           firstName: firstName.trim(),
           lastName: lastName.trim(),
-          phone: phone.trim(),
         });
 
         return goAfterAuth(role);
       }
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        err?.message ||
+        "Ошибка аутентификации";
+      alert(msg);
     } finally {
       setLoading(false);
     }
@@ -199,11 +185,7 @@ export default function LoginPage() {
               {roleTitle}: {role === "admin" ? "вход" : mode === "register" ? "регистрация" : "вход"}
             </h1>
 
-            {isLockedRole && (
-              <span>
-                
-              </span>
-            )}
+            {isLockedRole && <span />}
           </div>
 
           {/* Если роль НЕ зафиксирована в query — показываем табы ролей */}
@@ -299,7 +281,7 @@ export default function LoginPage() {
                     <input
                       value={inviteCode}
                       onChange={(e) => setInviteCode(e.target.value)}
-                      placeholder="Введите код (демо: 0000)"
+                      placeholder="Введите код"
                       className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
                     />
                   </div>

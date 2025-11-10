@@ -1,6 +1,6 @@
 // pages/admin/returns.tsx
 import { useEffect, useMemo, useState } from "react";
-import AdminLayout from "../../components/AdminLayout";
+import AdminLayout from "../../features/admin/AdminLayout";
 import {
   ReturnRequest,
   WarrantyCard,

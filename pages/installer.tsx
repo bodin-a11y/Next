@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "../lib/auth-context";
+import { api } from "../lib/api";
 
 export default function InstallerPage() {
   const router = useRouter();
@@ -30,7 +31,7 @@ export default function InstallerPage() {
   function handleFiles(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
     if (!files) return;
-    const fileArr = Array.from(files);
+    const fileArr = Array.from(files).slice(0, 5); // на всякий случай ограничим 5
 
     fileArr.forEach((file) => {
       const reader = new FileReader();
@@ -53,23 +54,22 @@ export default function InstallerPage() {
     try {
       const body = {
         serial: serial.trim(),
-        installerName: profile.phone,
+        installerName: profile?.phone ?? "",
         note: note.trim(),
-        photos,
+        photos, // массив base64-строк
       };
 
-      const res = await fetch("/api/installer/confirm", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Ошибка при отправке данных");
+      // ⬇️ внешний сервер: подтверждение монтажа через Planfix
+      const { data } = await api.post("/auth/planfix/confirm", body);
 
       setResult(data);
     } catch (err: any) {
-      alert(err.message || "Не удалось отправить данные");
+      const msg =
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        err?.message ||
+        "Не удалось отправить данные";
+      alert(msg);
     } finally {
       setSending(false);
     }

@@ -2,6 +2,9 @@
 import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect } from "react";
+import { useRouter } from "next/router";
+import { useAuth } from "../lib/auth-context";
 
 type CardProps = {
   title: string;
@@ -36,6 +39,22 @@ function Card({ title, text, href, gradient }: CardProps) {
 }
 
 export default function AdminPage() {
+  const router = useRouter();
+  const { profile, loading, logout } = useAuth();
+
+  // 🔒 защита по роли admin
+  useEffect(() => {
+    if (!loading) {
+      if (!profile || profile.role !== "admin") {
+        router.replace("/login?role=admin");
+      }
+    }
+  }, [loading, profile, router]);
+
+  if (!profile || profile.role !== "admin") {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
       <Head>
@@ -67,17 +86,15 @@ export default function AdminPage() {
               </Link>
             </div>
 
-            <nav className="hidden md:flex items-center gap-6">
-              <Link href="/" className="text-gray-600 hover:text-blue-600 transition">
-                Главная
-              </Link>
-              <Link href="#actions" className="text-gray-600 hover:text-blue-600 transition">
-                Действия
-              </Link>
-              <Link href="#steps" className="text-gray-600 hover:text-blue-600 transition">
-                Как это работает
-              </Link>
-            </nav>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-slate-500">{profile?.login || "admin"}</span>
+              <button
+                onClick={logout}
+                className="px-3 py-1.5 rounded-md border border-slate-300 hover:bg-slate-100 text-sm"
+              >
+                Выйти
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -127,7 +144,7 @@ export default function AdminPage() {
         {/* Действия администратора */}
         <section id="actions" className="py-14 sm:py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-3xl font-bold text-gray-900 text-center mb-3">Действия администратора</h2>
+            <h2 className="text-3см font-bold text-gray-900 text-center mb-3">Действия администратора</h2>
             <p className="text-center text-gray-600 mb-10">
               Управляйте ключевыми аспектами платформы. Подтверждение талонов здесь не требуется — статусы меняются автоматически.
             </p>

@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "../lib/auth-context";
+import { api } from "../lib/api";
 
 export default function SellerPage() {
   const router = useRouter();
@@ -46,14 +47,14 @@ export default function SellerPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!serial.trim()) return alert("Введите серийный номер");
-    if (!receiptFile) return alert("Загрузите фото чека");
+    if (!receiptFile && !preview) return alert("Загрузите фото чека");
 
     setSending(true);
     setResult(null);
 
     try {
-      let receiptBase64 = "";
-      if (preview) receiptBase64 = preview;
+      // если бэк принимает base64 (как раньше):
+      const receiptBase64 = preview || "";
 
       const body = {
         serial: serial.trim(),
@@ -63,17 +64,22 @@ export default function SellerPage() {
         receiptBase64,
       };
 
-      const res = await fetch("/api/seller/create", {
+      // теперь идём на внешний сервер
+      const data = await api("/warranty/create", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(body),
       });
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.error || "Ошибка при создании талона");
       setResult(data);
     } catch (err: any) {
-      alert(err.message || "Не удалось создать талон");
+      const msg =
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        err?.message ||
+        "Не удалось создать талон";
+      alert(msg);
     } finally {
       setSending(false);
     }
@@ -97,9 +103,7 @@ export default function SellerPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="text-sm text-slate-500">
-              {profile.phone}
-            </span>
+            <span className="text-sm text-slate-500">{profile.phone}</span>
             <button
               onClick={logout}
               className="px-3 py-1 rounded-md border border-slate-300 hover:bg-slate-100 text-sm"
@@ -184,11 +188,7 @@ export default function SellerPage() {
             {preview && (
               <div className="mt-4">
                 <p className="text-sm text-gray-500 mb-1">Предпросмотр:</p>
-                <img
-                  src={preview}
-                  alt="Чек"
-                  className="max-h-64 rounded-lg border"
-                />
+                <img src={preview} alt="Чек" className="max-h-64 rounded-lg border" />
               </div>
             )}
           </div>
@@ -217,10 +217,7 @@ export default function SellerPage() {
               </p>
             )}
             <div className="mt-3">
-              <Link
-                href={`/buyer?sn=${serial}`}
-                className="text-blue-600 hover:underline"
-              >
+              <Link href={`/buyer?sn=${serial}`} className="text-blue-600 hover:underline">
                 Перейти к странице покупателя
               </Link>
             </div>

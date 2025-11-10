@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 import dynamic from "next/dynamic";
-
 import { api } from "../lib/api";
 import type {
   WarrantyStatusResponse,
@@ -20,9 +19,10 @@ import {
 } from "../features/buyer";
 
 // важное: сканер камеры грузим только на клиенте
-const QrScanner = dynamic(() => import("../features/buyer/common/QrScanner"), {
-  ssr: false,
-});
+const QrScanner = dynamic(
+  async () => (await import("../features/buyer/common/QrScanner")).default,
+  { ssr: false }
+);
 
 export default function BuyerPage() {
   const router = useRouter();
@@ -55,10 +55,10 @@ export default function BuyerPage() {
   async function fetchStatus(sn: string) {
     setLoading(true);
     try {
-      const res = await api<WarrantyStatusResponse>(
-        `/api/warranty/status?serial=${encodeURIComponent(sn)}`
-      );
-      setData(res);
+      const { data } = await api.get<WarrantyStatusResponse>("/warranty/status", {
+        params: { serial: sn },
+      });
+      setData(data);
     } catch (e) {
       console.error(e);
       setData(null);
@@ -68,24 +68,34 @@ export default function BuyerPage() {
   }
 
   async function submitRequest(p: WarrantyRequestPayload) {
-    await api(`/api/warranty/request`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(p),
-    });
-    setShowRequest(false);
-    await fetchStatus(p.serial);
-    alert("Заявка отправлена. Статус — Черновик.");
+    try {
+      await api.post("/warranty/request", p);
+      setShowRequest(false);
+      await fetchStatus(p.serial);
+      alert("Заявка отправлена. Статус — Черновик.");
+    } catch (e: any) {
+      const msg =
+        e?.response?.data?.error ||
+        e?.response?.data?.message ||
+        e?.message ||
+        "Не удалось отправить заявку";
+      alert(msg);
+    }
   }
 
   async function submitSupport(p: SupportPayload) {
-    await api(`/api/warranty/support`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(p),
-    });
-    setShowSupport(false);
-    alert("Обращение отправлено. Мы свяжемся с вами.");
+    try {
+      await api.post("/warranty/support", p);
+      setShowSupport(false);
+      alert("Обращение отправлено. Мы свяжемся с вами.");
+    } catch (e: any) {
+      const msg =
+        e?.response?.data?.error ||
+        e?.response?.data?.message ||
+        e?.message ||
+        "Не удалось отправить обращение";
+      alert(msg);
+    }
   }
 
   // обработка результата сканера
