@@ -5,35 +5,35 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 import dynamic from "next/dynamic";
+
 import { api } from "../lib/api";
 import type {
   WarrantyStatusResponse,
   WarrantyRequestPayload,
   SupportPayload,
 } from "../types/warranty";
-import {
-  Actions,
-  StatusCard,
-  SupportForm,
-  WarrantyRequestForm,
-} from "../features/buyer";
 
-// важное: сканер камеры грузим только на клиенте
-const QrScanner = dynamic(
-  async () => (await import("../features/buyer/common/QrScanner")).default,
+type QrScannerProps = {
+  onDecode: (text: string) => void;
+  onClose: () => void;
+};
+
+// Сканер камеры грузим только на клиенте
+const QrScanner = dynamic<QrScannerProps>(
+  () => import("../features/buyer/common/QrScanner").then((m) => m.default),
   { ssr: false }
 );
 
 export default function BuyerPage() {
   const router = useRouter();
 
-  // sn из URL, если пришли по QR: /buyer?sn=XXXX
+  // sn из URL (если пришли по QR: /buyer?sn=XXXX)
   const snFromUrl = useMemo(
     () => (typeof router.query.sn === "string" ? router.query.sn : ""),
     [router.query.sn]
   );
 
-  const [serial, setSerial] = useState(snFromUrl);
+  const [serial, setSerial] = useState(snFromUrl || "");
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<WarrantyStatusResponse | null>(null);
 
@@ -43,7 +43,7 @@ export default function BuyerPage() {
 
   const status = data?.status;
 
-  // если пришли уже с ?sn=... — сразу грузим статус
+  // Если пришли уже с ?sn=... — сразу грузим статус
   useEffect(() => {
     if (snFromUrl) {
       setSerial(snFromUrl);
@@ -68,39 +68,25 @@ export default function BuyerPage() {
   }
 
   async function submitRequest(p: WarrantyRequestPayload) {
-    try {
-      await api.post("/warranty/request", p);
-      setShowRequest(false);
-      await fetchStatus(p.serial);
-      alert("Заявка отправлена. Статус — Черновик.");
-    } catch (e: any) {
-      const msg =
-        e?.response?.data?.error ||
-        e?.response?.data?.message ||
-        e?.message ||
-        "Не удалось отправить заявку";
-      alert(msg);
-    }
+    await api.post("/warranty/request", p, {
+      headers: { "Content-Type": "application/json" },
+    });
+    setShowRequest(false);
+    await fetchStatus(p.serial);
+    alert("Заявка отправлена. Статус — Черновик.");
   }
 
   async function submitSupport(p: SupportPayload) {
-    try {
-      await api.post("/warranty/support", p);
-      setShowSupport(false);
-      alert("Обращение отправлено. Мы свяжемся с вами.");
-    } catch (e: any) {
-      const msg =
-        e?.response?.data?.error ||
-        e?.response?.data?.message ||
-        e?.message ||
-        "Не удалось отправить обращение";
-      alert(msg);
-    }
+    await api.post("/warranty/support", p, {
+      headers: { "Content-Type": "application/json" },
+    });
+    setShowSupport(false);
+    alert("Обращение отправлено. Мы свяжемся с вами.");
   }
 
-  // обработка результата сканера
+  // Обработка результата сканера
   function handleDecoded(text: string) {
-    // В QR может быть либо URL (/buyer?sn=...), либо просто серийник
+    // В QR может быть URL (/buyer?sn=...), либо просто серийник
     try {
       const url = new URL(text);
       const sn = url.searchParams.get("sn");
@@ -247,6 +233,7 @@ export default function BuyerPage() {
               onCancel={() => setShowRequest(false)}
             />
           )}
+
           {showSupport && (
             <SupportForm
               serial={serial}
@@ -319,3 +306,11 @@ export default function BuyerPage() {
     </div>
   );
 }
+
+// Импортируем компоненты из фичи-пакета внизу, чтобы код выглядел компактнее
+import {
+  Actions,
+  StatusCard,
+  SupportForm,
+  WarrantyRequestForm,
+} from "../features/buyer";
